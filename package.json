@@ -1,0 +1,58 @@
+{
+  "name": "namecodes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "watchify src/bootstrap.js -o build/bundle.js -dv -p livereactload & serve ./"
+  },
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            [
+              "@babel/preset-env",
+              {
+                "useBuiltIns": "entry",
+                "forceAllTransforms": true,
+                "corejs": 3
+              }
+            ]
+          ]
+        }
+      ]
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vadimrostok/namecodes.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vadimrostok/namecodes/issues"
+  },
+  "homepage": "https://github.com/vadimrostok/namecodes#readme",
+  "dependencies": {
+    "@babel/polyfill": "^7.11.5",
+    "@babel/preset-react": "^7.10.4",
+    "core-js": "^3.6.5",
+    "lodash": "^4.17.20",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "regenerator-runtime": "^0.13.7"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.11.6",
+    "@babel/core": "^7.11.6",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/preset-env": "^7.11.5",
+    "babelify": "^10.0.0",
+    "browserify": "^16.5.2",
+    "livereactload": "^3.5.0",
+    "serve": "^11.3.2",
+    "watchify": "^3.11.1"
+  }
+}
