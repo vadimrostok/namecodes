@@ -1,0 +1,4 @@
+- autostart video for key
+- stop video after toggle
+- reveal on tap
+- first or blue?

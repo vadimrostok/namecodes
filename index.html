@@ -1,23 +1,129 @@
 <!doctype HTML>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Namecodes</title>
+    <script src="lib/instascan.min.js"></script>
     <style>
      body {
-         margin: 50px;
+         margin: 20px;
      }
-     .toggle-button {
-         position: absolute;
-         transform: translateY(calc(-100% - 10px));
-         padding: 5px;
+     .red-counter {
+         font-size: 2rem;
+         color: #f0604a;
          font-family: monospace;
-         right: 50px;
+     }
+     .blue-counter {
+         font-size: 2rem;
+         color: #3aa0f0;
+         font-family: monospace;
+     }
+     .red-text, .red-text .button {
+         color: #f0604a !important;
+     }
+     .blue-text, .blue-text .button {
+         color: #3aa0f0 !important;
+     }
+     .app-container {
+         position: relative;
+     }
+     .button {
+         font-family: monospace;
+         user-select: none;
+         cursor: pointer;
+         color: #bacada;
+         background: black;
+         border-width: 0;
+         padding: 10px;
+         display: inline-block;
+         font-family: sans-serif;
+         font-size: 1.2rem;
+         margin: 10px;
+         text-align: center;
+         border-radius: 5px;
+         width: calc(25% - 20px);
+         text-overflow: clip;
+         word-break: break-all;
+     }
+     .button.button-light {
+         background: white;
+     }
+     .toggle-role-button {
+         position: absolute;
+         right: 0px;
      }
      .board {
          width: 100%;
          height: calc(100vh - 100px);
+         positon: relative;
+     }
+     .board-item {
+         user-select: none;
+         cursor: pointer;
+         background: #bacada;
+         width: calc(20% - 20px);
+         height: calc(20% - 20px);
+         display: inline-block;
+         font-family: sans-serif;
+         font-size: 1.2rem;
+         margin: 10px;
+         text-align: center;
+         position: relative;
+         border-radius: 5px;
+     }
+     .card-killer {
+         background: #300000;
+         color: #ffffff;
+     }
+     .card-neutral {
+         background: #cbd0aa;
+         color: #ffffff;
+     }
+     .card-blue {
+         background: #3aa0f0;
+         color: #ffffff;
+     }
+     .card-red {
+         background: #f0604a;
+         color: #ffffff;
+     }
+     .board-item-text {
+         position: absolute;
+         top: 50%;
+         transform: translate(0, -50%);
+         text-overflow: clip;
+         width: calc(100% - 10px);
+         word-break: break-all;
+         left: 5px;
+     }
+     .board-item-text-upsidedown {
+         display: none;
      }
      #card-board {
+     }
+     .hidden {
+         display: none;
+     }
+     @media only screen and (max-width: 600px) {
+         .board-item {
+             width: calc(20% - 8px);
+             height: calc(20% - 8px);
+             margin: 4px;
+             border-radius: 3px;
+             padding: 8px 0;
+         }
+         .button {
+             width: auto;
+         }
+         body {
+             margin: 4px;
+         }
+         .toggle-role-button {
+             position: relative;
+             transform: none;
+             right: auto;
+         }
      }
     </style>
   </head>
