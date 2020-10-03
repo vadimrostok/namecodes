@@ -42,6 +42,7 @@
     "core-js": "^3.6.5",
     "instascan": "^1.0.0",
     "lodash": "^4.17.20",
+    "qr-scanner": "^1.2.0",
     "qrcode": "^1.4.4",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

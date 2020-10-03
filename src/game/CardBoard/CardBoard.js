@@ -31,7 +31,7 @@ export default function({ onBeACaptain }) {
       const height = window.innerHeight;
 
       let side = width > height ? height : width;
-      side -= side < 600 ? 8 : 40;
+      side -= side < 800 ? 8 : 40;
 
       const qrcode = board.boardKey.join('') + '|' + cardBoard.indices.join(',');
       // console.log('qrcode', qrcode);

@@ -7,7 +7,7 @@ let i18nConfig = {
   locale: 'ua',
   messages: {
     'Are you sure?': 'Ви впевнені?',
-    'Show QR': 'Показати QR',
+    'Show QR': 'Показати QR ключа поля',
     'Restart': 'Рестарт',
     'Change Cards': 'Змінити слова',
     'Be a Captain': 'Стати капітаном',
@@ -17,6 +17,8 @@ let i18nConfig = {
     'Scan board Qr code': 'Скануйте QR код ключа поля',
     'Go to new card board': 'Перейти до нового поля',
     'KILLER!!! You lost!': 'ВБИВЦЯ!!! Ви програли!',
+    'Upload from file': 'Завантажити фото',
+    'QR scan error': 'Помилка зчитування QR, спробуйте зробити краще фото.',
   }
 };
 

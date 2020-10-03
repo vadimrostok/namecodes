@@ -1,7 +1,7 @@
 import { CARD_BLUE, CARD_KILLER, CARD_NEUTRAL, CARD_RED } from './constants';
 import getDictionary from './dictionary/';
 
-const dictionary = getDictionary('UA').slice(0);
+let dictionary = getDictionary('UA').slice(0);
 
 export const getNewKeyBoard = () => {
   // first? getNewKeyBoard
@@ -38,10 +38,15 @@ export const getNewCardBoard = () => {
     indices[j] = indTemp;
   }
 
-  return {
+  const result = {
     indices: indices.slice(0, 25),
     cards: dictionary.slice(0, 25),
   };
+
+  // Reset Dictionary
+  dictionary = getDictionary('UA').slice(0);
+
+  return result;
 };
 
 export const isRevealed = (index, revealed) => revealed.indexOf(index) !== -1;
