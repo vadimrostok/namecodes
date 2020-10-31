@@ -11,12 +11,17 @@ class RTCConnectionWizard extends Component {
   state = {
     rtcOffer: null,
     showP2pOfferQr: false,
+    useDuet: false,
   };
 
   constructor(props) {
     super(props);
 
     this.state.showP2pOfferQr = props.isInitiator;
+    console.log('props.duetMode', props.duetMode);
+    if (props.duetMode) {
+      this.state.useDuet = true;
+    }
   }
 
   componentDidMount() {
@@ -42,10 +47,12 @@ class RTCConnectionWizard extends Component {
     };
     if (isInitiator) {
       sendChannel.onmessage = message => {
+        const { useDuet } = this.state;
+
         console.log('offerer, new message:', message);
 
         if (message.data === 'pong') {
-          this.props.onSuccess(sendChannel);
+          this.props.onSuccess(sendChannel, useDuet);
         }
       };
     }
@@ -76,19 +83,33 @@ class RTCConnectionWizard extends Component {
     });
   }
 
+  handleToggleDuet = () => {
+    this.setState({ useDuet: !this.state.useDuet });
+  }
+
   renderButtons() {
     const { onClose, isInitiator } = this.props;
-    const { showP2pOfferQr } = this.state;
+    const { showP2pOfferQr, useDuet } = this.state;
 
     return (
       <>
-        <button className="button button-light" onClick={onClose}>
-          <FormattedMessage id="Close" />
-        </button>
-        {(isInitiator && showP2pOfferQr) || (!isInitiator && !showP2pOfferQr) ? (
-          <button className="button button-light" onClick={this.handleGoToNextStep}>
+        {isInitiator ? (
+          <button className="button button--light" onClick={onClose}>
+            <FormattedMessage id="Close" />
+          </button>
+        ) : null}
+        {isInitiator && showP2pOfferQr ? (
+          <button className="button button--light" onClick={this.handleGoToNextStep}>
             <FormattedMessage id="Next" />
           </button>
+        ) : null}
+        {isInitiator ? (
+          <>
+            <div className="nice-text">
+              <input type="checkbox" id="use-duet-checkbox" checked={useDuet} onChange={this.handleToggleDuet} />
+              <label htmlFor="use-duet-checkbox"><FormattedMessage id="Duet?" /></label>
+            </div>
+          </>
         ) : null}
       </>
     );
@@ -159,9 +180,10 @@ class RTCConnectionWizard extends Component {
   }
 
   renderQR() {
+    const { isInitiator } = this.props;
     const { rtcOffer, showP2pOfferQr } = this.state;
 
-    return rtcOffer ? <QRCode showQr={showP2pOfferQr} code={rtcOffer} /> : null;
+    return rtcOffer ? <QRCode isInitiator={isInitiator} showQr={showP2pOfferQr} code={rtcOffer} /> : null;
   }
 
   render() {
@@ -172,7 +194,6 @@ class RTCConnectionWizard extends Component {
       <div className="rtc-wizard">
         <h3 className="header"><FormattedMessage id="RTC Wizard" /></h3>
         {this.renderButtons()}
-        <hr />
         {showP2pOfferQr ? (
           <>{this.renderQR()}</>
         ) : (

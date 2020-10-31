@@ -1,4 +1,4 @@
-import { CARD_BLUE, CARD_KILLER, CARD_NEUTRAL, CARD_RED } from './constants';
+import { CARD_BLUE, CARD_KILLER, CARD_NEUTRAL, CARD_RED, CARD_GREEN } from './constants';
 import getDictionary from './dictionary/';
 
 let dictionary = getDictionary('UA').slice(0);
@@ -22,6 +22,59 @@ export const getNewKeyBoard = () => {
   }
 
   return { isRedFirst, boardKey: newBoard };
+};
+
+export const getNewDuetKeyBoard = () => {
+  const boards = [
+    [CARD_KILLER, CARD_GREEN, CARD_GREEN],
+
+    [CARD_NEUTRAL, CARD_GREEN, CARD_GREEN],
+    [CARD_NEUTRAL, CARD_GREEN, CARD_GREEN],
+    [CARD_NEUTRAL, CARD_GREEN, CARD_GREEN],
+    [CARD_NEUTRAL, CARD_GREEN, CARD_GREEN],
+    [CARD_NEUTRAL, CARD_GREEN, CARD_GREEN],
+
+
+    [CARD_GREEN, CARD_GREEN, CARD_GREEN],
+    [CARD_GREEN, CARD_GREEN, CARD_GREEN],
+    [CARD_GREEN, CARD_GREEN, CARD_GREEN],
+
+    [CARD_GREEN, CARD_NEUTRAL, CARD_GREEN],
+    [CARD_GREEN, CARD_NEUTRAL, CARD_GREEN],
+    [CARD_GREEN, CARD_NEUTRAL, CARD_GREEN],
+    [CARD_GREEN, CARD_NEUTRAL, CARD_GREEN],
+    [CARD_GREEN, CARD_NEUTRAL, CARD_GREEN],
+
+    [CARD_GREEN, CARD_KILLER, CARD_GREEN],
+
+    [CARD_NEUTRAL, CARD_KILLER, CARD_KILLER],
+    [CARD_KILLER, CARD_KILLER, CARD_KILLER],
+
+    [CARD_NEUTRAL, CARD_NEUTRAL, CARD_NEUTRAL],
+    [CARD_NEUTRAL, CARD_NEUTRAL, CARD_NEUTRAL],
+    [CARD_NEUTRAL, CARD_NEUTRAL, CARD_NEUTRAL],
+    [CARD_NEUTRAL, CARD_NEUTRAL, CARD_NEUTRAL],
+    [CARD_NEUTRAL, CARD_NEUTRAL, CARD_NEUTRAL],
+    [CARD_NEUTRAL, CARD_NEUTRAL, CARD_NEUTRAL],
+    [CARD_NEUTRAL, CARD_NEUTRAL, CARD_NEUTRAL],
+
+    [CARD_KILLER, CARD_NEUTRAL, CARD_KILLER],
+  ];
+
+  // Shuffle board:
+  for(let i = boards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * i);
+    const temp = boards[i];
+    boards[i] = boards[j];
+    boards[j] = temp;
+  }
+
+  return [
+    { boardKey: boards.map(([item]) => item) },
+    { boardKey: boards.map(([_, item]) => item) },
+    { boardKey: boards.map(([_, _2, item]) => item),
+    },
+  ];
 };
 
 const shuffledBoardData = {

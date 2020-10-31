@@ -95,24 +95,24 @@ export default function({ onScanSuccess }) {
 
       <hr />
 
-      <span className="nice-text"><FormattedMessage id="Copy-paste code" /></span>
+      <span className="nice-text"><FormattedMessage id="Paste copied sdp code here and press submit" /></span>
       <textarea
         className="copy-textarea"
         rows="3"
         ref={textareaRef}
         autofocus
-        placeholder={intl.formatMessage({ id: 'Paste copied code here and press submit' })}
+        placeholder={intl.formatMessage({ id: 'Here' })}
       ></textarea>
-      <button className="button button-light" onClick={() => {
+      <button className="button button--light" onClick={() => {
         handleScanSuccess(textareaRef.current.value);
-      }}>Submit</button>
+      }}><FormattedMessage id="Submit" /></button>
 
       <hr />
 
-      <span className="nice-text"><FormattedMessage id="Or upload photo of QR code" /></span>
-      <div className="button button-light" onClick={handleOpenUploader}>
+      <div className="button button-wide button--light" onClick={handleOpenUploader}>
         <FormattedMessage id="Upload from file" />
       </div>
+      <span className="nice-text"><FormattedMessage id="Or upload photo of QR code" /></span>
       <input
         ref={fileRef}
         type="file"

@@ -66,12 +66,12 @@ export default function({ onGoToNewBoard }) {
         />
       ) : (
         <>
-          <button className="button toggle-scanning-button" onClick={() => {
+          <button className="button button-wide toggle-scanning-button" onClick={() => {
             setP2pWizardActive(true);
           }}>
             {intl.formatMessage({ id: 'Scan new key QR' })}
           </button>
-          <button className="button" onClick={onGoToNewBoard}>
+          <button className="button button-wide" onClick={onGoToNewBoard}>
             <FormattedMessage id="Go to new card board" />
           </button>
 

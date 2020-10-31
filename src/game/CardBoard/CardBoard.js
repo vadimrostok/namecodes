@@ -11,7 +11,7 @@ import RTCConnectionWizard from '../RTCConnectionWizard/RTCConnectionWizard';
 import rtcService from './../service/rtc';
 
 import { CARD_BLUE, CARD_KILLER, CARD_RED, keyToClass } from '../../constants';
-import { getNewKeyBoard, getNewCardBoard, isRevealed } from '../../helpers';
+import { getNewKeyBoard, getNewDuetKeyBoard, getNewCardBoard, isRevealed } from '../../helpers';
 
 let sendChannel;
 let remoteConnections = [];
@@ -38,19 +38,34 @@ export default function({ onBeACaptain }) {
 
   const restartKey = useCallback(() => {
     if (confirm(intl.formatMessage({ id: 'Are you sure?' }))) {
-      const newBoard = getNewKeyBoard();
+      if (duetMode) {
+        const [firstBoard, secondBoard, newBoard] = getNewDuetKeyBoard();
 
-      setBoard(newBoard);
-      setRevealed([]);
-      setBlueCount(0);
-      setRedCount(0);
+        setBoard(newBoard);
+        setRevealed([]);
+        setBlueCount(0);
+        setRedCount(0);
 
-      remoteConnections.forEach(sendChannel => {
-        sendChannel.send('setBoard:' + newBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
-        sendChannel.send('setRevealed:');
-      });
+        remoteConnections[0].send('setBoard:' + firstBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
+        remoteConnections[0].send('setRevealed:');
+
+        remoteConnections[1].send('setBoard:' + secondBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
+        remoteConnections[1].send('setRevealed:');
+      } else {
+        const newBoard = getNewKeyBoard();
+
+        setBoard(newBoard);
+        setRevealed([]);
+        setBlueCount(0);
+        setRedCount(0);
+
+        remoteConnections.forEach(sendChannel => {
+          sendChannel.send('setBoard:' + newBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
+          sendChannel.send('setRevealed:');
+        });
+      }
     }
-  }, [setBoard, setRevealed, cardBoard, remoteConnections]);
+  }, [setBoard, setRevealed, cardBoard, remoteConnections, duetMode]);
 
   const restartCards = useCallback(() => {
     if (confirm(intl.formatMessage({ id: 'Are you sure?' }))) {
@@ -83,19 +98,47 @@ export default function({ onBeACaptain }) {
     }
   }, [setRevealed, revealed, redCount, setRedCount, blueCount, setBlueCount, remoteConnections]);
 
-  const handleRTCConnection = useCallback((channel) => {
+  const [duetMode, setDuetMode] = useState(false);
+
+  const handleRTCConnection = useCallback((channel, useDuet) => {
     console.log('handleRTCConnection', channel, board, cardBoard);
 
     remoteConnections.push(channel);
     remoteConnections = [...remoteConnections];
 
-    console.log('remoteConnections', remoteConnections);
+    if (useDuet) {
+      setDuetMode(true);
 
-    channel.send('setBoard:' + board.boardKey.join('') + '|' + cardBoard.indices.join(','));
-    channel.send('setRevealed:' + revealed.join(','));
+      if (remoteConnections.length === 2) {
+        const [firstBoard, secondBoard, newBoard] = getNewDuetKeyBoard();
+
+        setBoard(newBoard);
+        setRevealed([]);
+        setBlueCount(0);
+        setRedCount(0);
+
+        remoteConnections[0].send('setBoard:' + firstBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
+        remoteConnections[0].send('setRevealed:');
+
+        remoteConnections[1].send('setBoard:' + secondBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
+        remoteConnections[1].send('setRevealed:');
+
+      } else {
+        setTimeout(() => {
+          alert(intl.formatMessage({ id: 'Connect second captain' }));
+          setP2pWizardActive(true);
+        }, 100);
+      }
+
+    } else {
+
+      channel.send('setBoard:' + board.boardKey.join('') + '|' + cardBoard.indices.join(','));
+      channel.send('setRevealed:' + revealed.join(','));
+      
+    }
 
     setP2pWizardActive(false);
-  }, [setP2pWizardActive, board, cardBoard, revealed, remoteConnections]);
+  }, [setDuetMode, setP2pWizardActive, board, cardBoard, revealed, remoteConnections]);
 
   return (
     <Fragment>
@@ -103,16 +146,20 @@ export default function({ onBeACaptain }) {
         <RTCConnectionWizard
           onClose={() => setP2pWizardActive(false)}
           isInitiator={true}
+          duetMode={duetMode}
           onSuccess={handleRTCConnection}
         />
       ) : (
         <>
           <div className={`button-block ${board.isRedFirst ? 'red-text' : 'blue-text'}`}>
-            <button className="button" onClick={() => {
-              setP2pWizardActive(true);
-            }}>
-              <FormattedMessage id="Connect Captain" />
-            </button>
+            {!duetMode || remoteConnections.length < 2 ? (
+              <button className="button" onClick={() => {
+                setP2pWizardActive(true);
+              }}>
+                <FormattedMessage id="Connect Captain" />
+              </button>
+            ) : null}
+            
             <button className="button" onClick={restartKey}>
               <FormattedMessage id="Restart" />
             </button>

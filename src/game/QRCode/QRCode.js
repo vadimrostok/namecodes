@@ -1,7 +1,8 @@
+import { FormattedMessage } from 'react-intl';
 import QRCode from 'qrcode';
 import React, { useEffect, useRef, Fragment, useState, useCallback } from 'react';
 
-export default function({ showQr, code }) {
+export default function({ isInitiator, showQr, code }) {
   const canvasRef = useRef();
   const textRef = useRef();
 
@@ -33,8 +34,16 @@ export default function({ showQr, code }) {
   return (
     <>
       <hr />
+      <span className="nice-text">
+        {isInitiator ? (
+          <FormattedMessage id="Copy-paste sdp code in captain interface" />
+        ) : (
+          <FormattedMessage id="Copy-paste sdp code in gameboard interface" />
+        )}
+      </span>
       <textarea className="copy-textarea" rows="3" ref={textRef}>{code}</textarea>
       <hr />
+      <span className="nice-text"><FormattedMessage id="Or scan board Qr code" /></span>
       <canvas className={showQr ? 'qr-code-canvas' : 'hidden'} ref={canvasRef} id="canvas"></canvas>
     </>);
 }
