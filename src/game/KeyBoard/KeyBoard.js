@@ -1,143 +1,135 @@
+//https://habr.com/ru/company/badoo/blog/315812/
+
 import { FormattedMessage, useIntl } from 'react-intl';
 import React, { useCallback, Fragment, useRef, useEffect, useState } from 'react';
-import QrScanner from 'qr-scanner';
+import adapter from 'webrtc-adapter';
 
 import { keyToClass } from '../../constants';
+import QRCode from '../QRCode/QRCode';
+import Scanner from '../Scanner/Scanner';
 import getDictionary from '../../dictionary/';
-
-QrScanner.WORKER_PATH = 'lib/qr-scanner-worker.min.js';
 
 const dictionary = getDictionary('UA').slice(0);
 
-const scannerHandles = {
-  qrScannerRef: null,
-  streamRef: null,
-};
+let remoteConnection;
 
-const stopScanning = () => {
-  if (scannerHandles.qrScannerRef) {
-    scannerHandles.qrScannerRef.stop().then(() => {
-      scannerHandles.qrScannerRef = null;
-    });
-  }
-};
+let pendingCandidates = [];
 
 export default function({ onGoToNewBoard }) {
   const intl = useIntl();
 
   const [board, setBoard] = useState([]);
   const [cardBoard, setCardBoard] = useState([]);
-  
-  const videoRef = useRef();
 
-  const [isScanning, setIsScanning] = useState(true);
-  const toggleIsScanning = useCallback(() => {
-    setIsScanning(!isScanning);
-  }, [setIsScanning, isScanning]);
+  const [rtcOffer, setRtcOffer] = useState('');
+  const [p2pConnection, setP2pConnection] = useState(false);
+  const [showP2pOfferQr, setShowP2pOfferQr] = useState(false);
+  const [showP2pAnswerScanner, setShowP2pAnswerScanner] = useState(false);
 
   useEffect(() => {
-    try { // Absent camera should not crash the app.
-      if (videoRef.current && !scannerHandles.qrScannerRef && isScanning) {
-        scannerHandles.qrScannerRef = new window.Instascan.Scanner({
-          video: videoRef.current
-        });
-        scannerHandles.qrScannerRef.addListener('scan', function (content) {
-          const [keyStr, cardsStr] = content.split('|');
-          setBoard(keyStr.split(''));
-          setCardBoard(cardsStr.split(',').map(index => dictionary[index]));
-          setIsScanning(false);
-          stopScanning();
-        });
-        window.Instascan.Camera.getCameras().then(function (cameras) {
-          if (cameras.length > 0) {
-            scannerHandles.qrScannerRef.start(cameras[0]);
-          } else {
-            console.error('No cameras found.');
-          }
-        }).catch(function (e) {
-          console.error(e);
-        });
-      }
-      if (scannerHandles.qrScannerRef && !isScanning) {
-        stopScanning();
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    remoteConnection = new window.RTCPeerConnection({
+      iceServers: [{
+        url: 'stun:stun.l.google.com:19302'
+      }],
+    });
 
-    return () => {
-      stopScanning();
+    const sendChannel = remoteConnection.createDataChannel('sendChannel');
+
+    sendChannel.onopen = () => {
+      console.log('handleSendChannelStatusChange');
     };
-  }, [videoRef.current, isScanning, scannerHandles, scannerHandles.qrScannerRef]);
+    sendChannel.onclose = () => {
+      console.log('handleSendChannelStatusChange');
+    };
+  }, [setRtcOffer]);
 
-  const handleFile = useCallback((e) => {
-    const fileList = e.target.files;
-    var img = new Image();   // Create new img element
-    img.src = window.URL.createObjectURL(fileList[0]); // set src to blob url
+  const handleScanSuccess = useCallback((sdp) => {
 
-    const context = canvasRef.current.getContext('2d');
-    img.onload = () => {
-      const height = Math.floor(img.height/img.width*500);
-      canvasRef.current.height = height;
-      context.drawImage(img, 0, 0, 500, height);
+    console.log('handleScanSuccess', sdp, JSON.parse(sdp));
 
-      QrScanner.scanImage(canvasRef.current)
-        .then(result => {
-          const [keyStr, cardsStr] = result.split('|');
-          setBoard(keyStr.split(''));
-          setCardBoard(cardsStr.split(',').map(index => dictionary[index]));
-          setIsScanning(false);
-          stopScanning();
-        })
-        .catch(error => {
-          alert(intl.formatMessage({ id: 'QR scan error' }));
-        });
+    const rsd = new window.RTCSessionDescription(JSON.parse(sdp));
+    remoteConnection.setRemoteDescription(rsd);
+
+    console.log('remote - ', rsd);
+
+    // while (pendingCandidates.length) {
+    //   try {
+    //     const candidate = pendingCandidates.pop();
+
+    //     this.peerConnection.addIceCandidate(new window.RTCIceCandidate(candidate));
+    //     this.log('Added his ICE-candidate:' + candidate.candidate, 'gray');
+    //   } catch (err) {
+    //     this.log('Error adding remote ice candidate' + err.message, 'red');
+    //   }
+    // }
+    
+    remoteConnection.createAnswer()
+      .then(offer => remoteConnection.setLocalDescription(offer))
+      .then(() => {
+        console.log('localConnection.localDescription', remoteConnection.localDescription, JSON.stringify(remoteConnection.localDescription.toJSON()));
+
+        setRtcOffer(JSON.stringify(remoteConnection.localDescription.toJSON()));
+
+        setShowP2pAnswerScanner(false);
+        setShowP2pOfferQr(true);
+      });
+
+    remoteConnection.ondatachannel = (event) => {
+      console.log('new channel', event);
+      const receiveChannel = event.channel;
+      receiveChannel.onmessage = (m) => {
+        console.log('message->', m);
+
+        receiveChannel.send('pong');
+      };
+      receiveChannel.onopen = () => {
+        console.log('open');
+      };
+      receiveChannel.onclose = () => {
+        console.log('handleSendChannelStatusChange');
+      };
     };
 
-  }, []);
+    return;
 
-  const fileRef = useRef();
-  const canvasRef = useRef();
+    // FIXME:
+    // const [keyStr, cardsStr] = content.split('|');
 
-  const handleOpenUploader = useCallback(() => {
-    fileRef.current.click();
-  }, []);
+    // setBoard(keyStr.split(''));
+    // setCardBoard(cardsStr.split(',').map(index => dictionary[index]));
+    // setIsScanning(false);
+  }, [remoteConnection]);
 
   return (
     <Fragment>
-      <button className="button toggle-scanning-button" onClick={toggleIsScanning}>
-        {isScanning ?
-         intl.formatMessage({ id: 'Stop Scanning' }) :
-         intl.formatMessage({ id: 'Scan new key QR' })
-        }
-      </button>
-      {!isScanning ? (
+      {p2pConnection ? (
+        <button className="button toggle-scanning-button" onClick={() => {
+          setP2pConnection(false);
+          setShowP2pOfferQr(false);
+          setShowP2pAnswerScanner(false);
+        }}>
+          {intl.formatMessage({ id: 'Stop Scanning' })}
+        </button>
+      ) : (
+        <button className="button toggle-scanning-button" onClick={() => {
+          setP2pConnection(true);
+          setShowP2pOfferQr(false);
+          setShowP2pAnswerScanner(true);
+        }}>
+          {intl.formatMessage({ id: 'Scan new key QR' })}
+        </button>
+      )}
+      {!p2pConnection ? (
         <button className="button" onClick={onGoToNewBoard}>
           <FormattedMessage id="Go to new card board" />
         </button>
       ) : null}
-      {isScanning ? (
+      {p2pConnection ? (
         <>
-          <div className="button" onClick={handleOpenUploader}>
-            <FormattedMessage id="Upload from file" />
-          </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accepts="image/*"
-            onChange={handleFile}
-            style={{ display: 'none' }}
-            id="qr-photo-file-input"
-          />
-          <canvas className="hidden" width="600" ref={canvasRef}></canvas>
-          <i>
-            <FormattedMessage id="Scan board Qr code" />:
-          </i>
-          <video
-            width={window.innerWidth - (window.innerWidth < 800 ? 8 : 40)}
-            /* autoPlay */
-            ref={videoRef}
-          ></video>
+          {showP2pAnswerScanner ? (
+            <Scanner onScanSuccess={handleScanSuccess} />
+          ) : null}
+          <QRCode showQr={showP2pOfferQr} code={rtcOffer} />
         </>
       ) : (
         <>

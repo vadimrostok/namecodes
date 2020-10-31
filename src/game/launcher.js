@@ -28,7 +28,7 @@ import KeyBoard from './KeyBoard/';
 function Game() {
   const intl = useIntl();
 
-  const [isCaptain, setIsCaptain] = useState(false);
+  const [isCaptain, setIsCaptain] = useState(window.location.search === '?captain');
 
   const toggle = useCallback(() => {
     if (confirm(intl.formatMessage({ id: 'Are you sure?' }))) {
