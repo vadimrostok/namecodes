@@ -32,6 +32,8 @@ export default function({ onScanSuccess }) {
 
   useEffect(() => {
     try { // Absent camera should not crash the app.
+      textareaRef.current.focus();
+
       if (videoRef.current && !scannerHandles.qrScannerRef) {
         scannerHandles.qrScannerRef = new window.Instascan.Scanner({
           video: videoRef.current
@@ -84,7 +86,7 @@ export default function({ onScanSuccess }) {
     fileRef.current.click();
   }, []);
 
-  const ref = React.useRef();
+  const textareaRef = React.useRef();
 
   return (
     <>
@@ -97,11 +99,12 @@ export default function({ onScanSuccess }) {
       <textarea
         className="copy-textarea"
         rows="3"
-        ref={ref}
+        ref={textareaRef}
+        autofocus
         placeholder={intl.formatMessage({ id: 'Paste copied code here and press submit' })}
       ></textarea>
       <button className="button button-light" onClick={() => {
-        handleScanSuccess(ref.current.value);
+        handleScanSuccess(textareaRef.current.value);
       }}>Submit</button>
 
       <hr />

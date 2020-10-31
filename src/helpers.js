@@ -24,23 +24,34 @@ export const getNewKeyBoard = () => {
   return { isRedFirst, boardKey: newBoard };
 };
 
+const shuffledBoardData = {
+  ready: false,
+  dictionary: [],
+  indices: [],
+};
 export const getNewCardBoard = () => {
-  // Shuffle board:
-  const indices = new Array(dictionary.length).fill(0).map((_, index) => index);
-  for(let i = dictionary.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * i);
-    const temp = dictionary[i];
-    dictionary[i] = dictionary[j];
-    dictionary[j] = temp;
+  if (!shuffledBoardData.ready) {
+    // Shuffle board:
+    const indices = new Array(dictionary.length).fill(0).map((_, index) => index);
+    for(let i = dictionary.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * i);
+      const temp = dictionary[i];
+      dictionary[i] = dictionary[j];
+      dictionary[j] = temp;
 
-    const indTemp = indices[i];
-    indices[i] = indices[j];
-    indices[j] = indTemp;
+      const indTemp = indices[i];
+      indices[i] = indices[j];
+      indices[j] = indTemp;
+    }
+
+    shuffledBoardData.ready = true;
+    shuffledBoardData.indices = indices;
+    shuffledBoardData.dictionary = dictionary;
   }
 
   const result = {
-    indices: indices.slice(0, 25),
-    cards: dictionary.slice(0, 25),
+    indices: shuffledBoardData.indices.splice(0, 25),
+    cards: shuffledBoardData.dictionary.splice(0, 25),
   };
 
   // Reset Dictionary

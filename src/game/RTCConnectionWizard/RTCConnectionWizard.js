@@ -41,10 +41,10 @@ class RTCConnectionWizard extends Component {
       console.log('handleSendChannelStatusChange');
     };
     if (isInitiator) {
-      sendChannel.onmessage = (m) => {
-        console.log('offerer, new message:', m);
+      sendChannel.onmessage = message => {
+        console.log('offerer, new message:', message);
 
-        if (m === 'pong') {
+        if (message.data === 'pong') {
           this.props.onSuccess(sendChannel);
         }
       };
@@ -106,23 +106,6 @@ class RTCConnectionWizard extends Component {
       remoteConnection.setRemoteDescription(rsd);
       console.log('set remote', rsd);
 
-      const sendChannel2 = remoteConnection.createDataChannel('sendChannel2');
-      
-      sendChannel2.onopen = () => {
-        console.log('handleSendChannelStatusChange');
-        
-        sendChannel2.send('ping2');
-      };
-      sendChannel2.onclose = () => {
-        console.log('handleSendChannelStatusChange2');
-      };
-      sendChannel2.onmessage = (m) => {
-        console.log('offerer, new message2:', m);
-
-        if (m === 'pong') {
-          this.props.onSuccess(sendChannel2);
-        }
-      };
     } else {
       console.log('handleScanSuccess', sdp, JSON.parse(sdp));
 
@@ -154,10 +137,14 @@ class RTCConnectionWizard extends Component {
         console.log('new channel', event);
         const receiveChannel = event.channel;
 
-        receiveChannel.onmessage = (m) => {
-          console.log('answerer, new message:', m);
+        receiveChannel.onmessage = message => {
+          console.log('answerer, new message:', message);
 
-          receiveChannel.send('pong');
+          if (message.data === 'ping') {
+            receiveChannel.send('pong');
+
+            this.props.onSuccess(event.channel);
+          }
         };
         receiveChannel.onopen = () => {
           console.log('open');
@@ -165,8 +152,6 @@ class RTCConnectionWizard extends Component {
         receiveChannel.onclose = () => {
           console.log('handleSendChannelStatusChange');
         };
-
-        this.props.onSuccess(event.channel);
       };
 
       return;
