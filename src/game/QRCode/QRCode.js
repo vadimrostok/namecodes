@@ -3,6 +3,7 @@ import React, { useEffect, useRef, Fragment, useState, useCallback } from 'react
 
 export default function({ showQr, code }) {
   const canvasRef = useRef();
+  const textRef = useRef();
 
   useEffect(() => {
     if (canvasRef.current && code.length) {
@@ -21,14 +22,19 @@ export default function({ showQr, code }) {
           console.error(error);
         }
       });
+
+      window.setTimeout(() => {
+        textRef.current.select();
+        document.execCommand('copy');
+      }, 1);
     }
-  }, [canvasRef.current, code]);
+  }, [canvasRef, textRef, code]);
 
   return (
     <>
       <hr />
-      <code>{code}</code>
+      <textarea className="copy-textarea" rows="3" ref={textRef}>{code}</textarea>
       <hr />
-      <canvas className={showQr ? '' : 'hidden'} ref={canvasRef} id="canvas"></canvas>
+      <canvas className={showQr ? 'qr-code-canvas' : 'hidden'} ref={canvasRef} id="canvas"></canvas>
     </>);
 }

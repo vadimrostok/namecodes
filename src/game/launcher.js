@@ -4,7 +4,7 @@ import { IntlProvider, useIntl } from 'react-intl';
 
 
 let i18nConfig = {
-  locale: 'ua',
+  locale: 'uk-UA',
   messages: {
     'Are you sure?': 'Ви впевнені?',
     'Show QR': 'Показати QR ключа поля',
@@ -19,6 +19,8 @@ let i18nConfig = {
     'KILLER!!! You lost!': 'ВБИВЦЯ!!! Ви програли!',
     'Upload from file': 'Завантажити фото',
     'QR scan error': 'Помилка зчитування QR, спробуйте зробити краще фото.',
+    'Connect Captain': 'Під\'єднати капітана',
+    'Next': 'Далі',
   }
 };
 

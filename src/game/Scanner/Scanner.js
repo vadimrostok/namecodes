@@ -88,7 +88,26 @@ export default function({ onScanSuccess }) {
 
   return (
     <>
-      <div className="button" onClick={handleOpenUploader}>
+      
+      <canvas className="hidden" width="1500" ref={canvasRef}></canvas>
+
+      <hr />
+
+      <span className="nice-text"><FormattedMessage id="Copy-paste code" /></span>
+      <textarea
+        className="copy-textarea"
+        rows="3"
+        ref={ref}
+        placeholder={intl.formatMessage({ id: 'Paste copied code here and press submit' })}
+      ></textarea>
+      <button className="button button-light" onClick={() => {
+        handleScanSuccess(ref.current.value);
+      }}>Submit</button>
+
+      <hr />
+
+      <span className="nice-text"><FormattedMessage id="Or upload photo of QR code" /></span>
+      <div className="button button-light" onClick={handleOpenUploader}>
         <FormattedMessage id="Upload from file" />
       </div>
       <input
@@ -99,14 +118,12 @@ export default function({ onScanSuccess }) {
         style={{ display: 'none' }}
         id="qr-photo-file-input"
       />
-      <canvas className="hidden" width="1500" ref={canvasRef}></canvas>
-      <textarea ref={ref}></textarea>
-      <button onClick={() => {
-        handleScanSuccess(ref.current.value);
-      }}>Submit</button>
-      <i>
-        <FormattedMessage id="Scan board Qr code" />:
-      </i>
+
+      <hr />
+
+      <span className="nice-text">
+        <FormattedMessage id="Or scan board Qr code" />:
+      </span>
       <video
         width={window.innerWidth - (window.innerWidth < 800 ? 8 : 40)}
         /* autoPlay */
