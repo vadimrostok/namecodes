@@ -1,5 +1,5 @@
 import React, { Component, useEffect, useRef, Fragment, useState, useCallback } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage, injectIntl } from 'react-intl';
 import adapter from 'webrtc-adapter';
 
 import QRCode from '../QRCode/QRCode';
@@ -11,20 +11,19 @@ class RTCConnectionWizard extends Component {
   state = {
     rtcOffer: null,
     showP2pOfferQr: false,
-    useDuet: false,
   };
+
+  remotePlayersDuetMode = false
 
   constructor(props) {
     super(props);
 
     this.state.showP2pOfferQr = props.isInitiator;
-    console.log('props.duetMode', props.duetMode);
-    if (props.duetMode) {
-      this.state.useDuet = true;
-    }
   }
 
   componentDidMount() {
+    this.remotePlayersDuetMode = confirm(this.props.intl.formatMessage({ id: 'Are players remote?' }));
+
     const { isInitiator } = this.props;
 
     console.log('creating remoteConnection, isInitiator', isInitiator);
@@ -47,12 +46,11 @@ class RTCConnectionWizard extends Component {
     };
     if (isInitiator) {
       sendChannel.onmessage = message => {
-        const { useDuet } = this.state;
 
         console.log('offerer, new message:', message);
 
         if (message.data === 'pong') {
-          this.props.onSuccess(sendChannel, useDuet);
+          this.props.onSuccess(sendChannel);
         }
       };
     }
@@ -74,6 +72,8 @@ class RTCConnectionWizard extends Component {
           console.log('ice candidate: ', e.candidate);
         }
       };
+    } else if (this.props.duetSdp) {
+      this.handleScanSuccess(this.props.duetSdp);
     }
   }
 
@@ -83,13 +83,9 @@ class RTCConnectionWizard extends Component {
     });
   }
 
-  handleToggleDuet = () => {
-    this.setState({ useDuet: !this.state.useDuet });
-  }
-
   renderButtons() {
     const { onClose, isInitiator } = this.props;
-    const { showP2pOfferQr, useDuet } = this.state;
+    const { showP2pOfferQr } = this.state;
 
     return (
       <>
@@ -102,14 +98,6 @@ class RTCConnectionWizard extends Component {
           <button className="button button--light" onClick={this.handleGoToNextStep}>
             <FormattedMessage id="Next" />
           </button>
-        ) : null}
-        {isInitiator ? (
-          <>
-            <div className="nice-text">
-              <input type="checkbox" id="use-duet-checkbox" checked={useDuet} onChange={this.handleToggleDuet} />
-              <label htmlFor="use-duet-checkbox"><FormattedMessage id="Duet?" /></label>
-            </div>
-          </>
         ) : null}
       </>
     );
@@ -183,7 +171,12 @@ class RTCConnectionWizard extends Component {
     const { isInitiator } = this.props;
     const { rtcOffer, showP2pOfferQr } = this.state;
 
-    return rtcOffer ? <QRCode isInitiator={isInitiator} showQr={showP2pOfferQr} code={rtcOffer} /> : null;
+    return rtcOffer ? <QRCode
+                        isInitiator={isInitiator}
+                        showQr={showP2pOfferQr}
+                        code={rtcOffer}
+                        remotePlayersDuetMode={this.remotePlayersDuetMode}
+                      /> : null;
   }
 
   render() {
@@ -197,12 +190,12 @@ class RTCConnectionWizard extends Component {
         {showP2pOfferQr ? (
           <>{this.renderQR()}</>
         ) : (
-          <Scanner onScanSuccess={this.handleScanSuccess}/>
+          <Scanner remotePlayersDuetMode={this.remotePlayersDuetMode} onScanSuccess={this.handleScanSuccess}/>
         )}
       </div>
     );
   }
 };
 
-export default RTCConnectionWizard;
+export default injectIntl(RTCConnectionWizard);
 

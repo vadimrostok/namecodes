@@ -2,12 +2,17 @@ import { FormattedMessage } from 'react-intl';
 import QRCode from 'qrcode';
 import React, { useEffect, useRef, Fragment, useState, useCallback } from 'react';
 
-export default function({ isInitiator, showQr, code }) {
+export default function({ isInitiator, showQr, code, remotePlayersDuetMode }) {
   const canvasRef = useRef();
   const textRef = useRef();
 
   useEffect(() => {
-    if (canvasRef.current && code.length) {
+    if (remotePlayersDuetMode) {
+      window.setTimeout(() => {
+        textRef.current.select();
+        document.execCommand('copy');
+      }, 1);
+    } else if (canvasRef.current && code.length) {
       const width = window.innerWidth;
       const height = window.innerHeight;
 
@@ -29,21 +34,59 @@ export default function({ isInitiator, showQr, code }) {
         document.execCommand('copy');
       }, 1);
     }
-  }, [canvasRef, textRef, code]);
+  }, [canvasRef, textRef, code, isInitiator, remotePlayersDuetMode]);
 
   return (
     <>
       <hr />
-      <span className="nice-text">
-        {isInitiator ? (
-          <FormattedMessage id="Copy-paste sdp code in captain interface" />
-        ) : (
-          <FormattedMessage id="Copy-paste sdp code in gameboard interface" />
-        )}
-      </span>
-      <textarea className="copy-textarea" rows="3" ref={textRef}>{code}</textarea>
-      <hr />
-      <span className="nice-text"><FormattedMessage id="Or scan board Qr code" /></span>
-      <canvas className={showQr ? 'qr-code-canvas' : 'hidden'} ref={canvasRef} id="canvas"></canvas>
+      {remotePlayersDuetMode ? (
+        <>
+          {isInitiator ? (
+            <>
+              <span className="nice-text">
+                <FormattedMessage id="Share this link to the second player" />:
+              </span>
+              <textarea
+                className="copy-textarea"
+                rows="3"
+                ref={textRef}
+                defaultValue={`${origin}?connect-duet=${encodeURIComponent(code)}`}
+              ></textarea>
+            </>
+          ) : (
+            <>
+              <span className="nice-text">
+                <FormattedMessage id="Share this sdp code to another player" />:
+              </span>
+              <textarea
+                className="copy-textarea"
+                rows="3"
+                ref={textRef}
+                defaultValue={code}
+              ></textarea>
+            </>
+          )}
+          
+        </>
+      ) : (
+        <>
+          <span className="nice-text">
+            {isInitiator ? (
+              <FormattedMessage id="Copy-paste sdp code in captain interface" />
+            ) : (
+              <FormattedMessage id="Copy-paste sdp code in gameboard interface" />
+            )}
+          </span>
+          <textarea
+            className="copy-textarea"
+            rows="3"
+            ref={textRef}
+            defaultValue={code}
+          ></textarea>
+          <hr />
+          <span className="nice-text"><FormattedMessage id="Or scan board Qr code" /></span>
+          <canvas className={showQr ? 'qr-code-canvas' : 'hidden'} ref={canvasRef} id="canvas"></canvas>
+        </>
+      )}
     </>);
 }

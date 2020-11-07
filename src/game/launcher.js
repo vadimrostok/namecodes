@@ -1,4 +1,4 @@
-import React, { useState, useCallback, Fragment } from 'react';
+import React, { useEffect, useState, useCallback, Fragment } from 'react';
 import { render } from 'react-dom';
 import { IntlProvider, useIntl } from 'react-intl';
 
@@ -8,7 +8,7 @@ let i18nConfig = {
   messages: {
     'Are you sure?': 'Ви впевнені?',
     'Show QR': 'Показати QR ключа поля',
-    'Restart': 'Рестарт',
+    'Restart': 'Нова гра',
     'Change Cards': 'Змінити слова',
     'Be a Captain': 'Стати капітаном',
     'Close': 'Закрити',
@@ -32,16 +32,35 @@ let i18nConfig = {
     'Duet?': 'Дует?',
     'Here': 'Вставте сюди',
     'Upload from file': 'Завантажити фото QR sdp кода',
+    'Connect Partner': 'Під\'єднати партнера',
+    'Share this link to the second player': 'Передайте це посилання другому гравцю',
+    'Share this sdp code to another player': 'Передайте це sdp код іншому гравцю',
   }
 };
 
 import CardBoard from './CardBoard/';
+import DuetCardBoard from './DuetCardBoard/';
 import KeyBoard from './KeyBoard/';
 
 function Game() {
   const intl = useIntl();
 
   const [isCaptain, setIsCaptain] = useState(window.location.search === '?captain');
+  const [isDuet, setIsDuet] = useState(window.location.search === '?duet');
+  const [duetSdp, setDuetSdp] = useState(null);
+
+  useEffect(() => {
+    // console.log(window.location.search, window.location.search.startsWith('?connect-duet='));
+    if (window.location.search.startsWith('?connect-duet=')) {
+      setIsDuet(true);
+      setDuetSdp(decodeURIComponent(window.location.search.slice(
+        window.location.search.indexOf('?connect-duet=') + '?connect-duet='.length,
+      )));
+      // console.log('decode', decodeURIComponent(window.location.search.slice(
+      //   window.location.search.indexOf('?connect-duet=') + '?connect-duet='.length,
+      // )));
+    }
+  }, [setIsDuet, setDuetSdp]);
 
   const toggle = useCallback(() => {
     if (confirm(intl.formatMessage({ id: 'Are you sure?' }))) {
@@ -51,9 +70,22 @@ function Game() {
     isCaptain, setIsCaptain
   ]);
 
+  const handleSetUseDuet = useCallback((useDuet) => {
+    setIsDuet(useDuet);
+  }, [
+    setIsDuet,
+  ]);
+
+  console.log('render', isDuet, duetSdp);
   return (
     <div className="app-container">
-      {isCaptain ? <KeyBoard onGoToNewBoard={toggle} /> : <CardBoard onBeACaptain={toggle} />}
+      {isDuet ? (
+        <DuetCardBoard onSetUseDuet={handleSetUseDuet} duetSdp={duetSdp} />
+      ) : (
+        <>
+          {isCaptain ? <KeyBoard onGoToNewBoard={toggle} /> : <CardBoard onSetUseDuet={handleSetUseDuet} onBeACaptain={toggle} />}
+        </>
+      )}
     </div>
   );
 }

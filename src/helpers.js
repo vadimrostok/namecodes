@@ -72,8 +72,7 @@ export const getNewDuetKeyBoard = () => {
   return [
     { boardKey: boards.map(([item]) => item) },
     { boardKey: boards.map(([_, item]) => item) },
-    { boardKey: boards.map(([_, _2, item]) => item),
-    },
+    { boardKey: boards.map(([_, _2, item]) => item), },
   ];
 };
 

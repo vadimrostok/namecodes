@@ -8,22 +8,29 @@ import QRCode from '../QRCode/QRCode';
 import Scanner from '../Scanner/Scanner';
 import RTCConnectionWizard from '../RTCConnectionWizard/RTCConnectionWizard';
 
+import getDictionary from '../../dictionary/';
+const dictionary = getDictionary('UA').slice(0);
+
 import rtcService from './../service/rtc';
 
-import { CARD_BLUE, CARD_KILLER, CARD_RED, keyToClass } from '../../constants';
+import { CARD_BLUE, CARD_KILLER, CARD_RED, keyToClass, keyToDuetClass } from '../../constants';
 import { getNewKeyBoard, getNewDuetKeyBoard, getNewCardBoard, isRevealed } from '../../helpers';
 
 let sendChannel;
 let remoteConnections = [];
 
-export default function({ onBeACaptain, onSetUseDuet }) {
+export default function({ duetSdp, onSetUseDuet }) {
   const [board, setBoard] = useState({ isRedFirst: false, boardKey: [] });
+  const [visibleBoard, setVisibleBoard] = useState({ isRedFirst: false, boardKey: [] });
+  const [secondBoard, setSecondBoard] = useState({ isRedFirst: false, boardKey: [] });
+
   const [cardBoard, setCardBoard] = useState({ indices: [], cards: [] });
+
   const [revealed, setRevealed] = useState([]);
   const [redCount, setRedCount] = useState(0);
   const [blueCount, setBlueCount] = useState(0);
 
-  const [p2pWizardActive, setP2pWizardActive] = useState(false);
+  const [p2pWizardActive, setP2pWizardActive] = useState(!!duetSdp || false);
 
   const intl = useIntl();
 
@@ -32,52 +39,47 @@ export default function({ onBeACaptain, onSetUseDuet }) {
   }, []);
 
   useEffect(() => {
-    setBoard(getNewKeyBoard());
+    const [firstBoard, secondBoard, newBoard] = getNewDuetKeyBoard();
+    setBoard(newBoard);
+    setVisibleBoard(firstBoard);
+    setSecondBoard(secondBoard);
     setCardBoard(getNewCardBoard());
   }, [setBoard, setCardBoard]);
 
   const restartGame = useCallback(() => {
     if (confirm(intl.formatMessage({ id: 'Are you sure?' }))) {
-      if (confirm(intl.formatMessage({ id: 'Duet?' }))) {
-        onSetUseDuet(true);
+      if (!confirm(intl.formatMessage({ id: 'Duet?' }))) {
+        onSetUseDuet(false);
       } else {
-
-        if (duetMode) {
-          const [firstBoard, secondBoard, newBoard] = getNewDuetKeyBoard();
-
-          setBoard(newBoard);
-          setRevealed([]);
-          setBlueCount(0);
-          setRedCount(0);
-
-          remoteConnections[0].send('setBoard:' + firstBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
-          remoteConnections[0].send('setRevealed:');
-
-          remoteConnections[1].send('setBoard:' + secondBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
-          remoteConnections[1].send('setRevealed:');
+        if (duetSdp) {
+          
         } else {
-          const newBoard = getNewKeyBoard();
+          const [firstBoard, secondBoard, newBoard] = getNewDuetKeyBoard();
+          const newCardBoard = getNewCardBoard();
 
           setBoard(newBoard);
+          setVisibleBoard(firstBoard);
+          setSecondBoard(secondBoard);
           setRevealed([]);
           setBlueCount(0);
           setRedCount(0);
 
-          remoteConnections.forEach(sendChannel => {
-            sendChannel.send('setBoard:' + newBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
-            sendChannel.send('setRevealed:');
+          setCardBoard(newCardBoard);
+
+          remoteConnections.forEach(remoteConnection => {
+            remoteConnection.send(
+              'setBoard:' + JSON.stringify({
+                board: newBoard,
+                visibleBoard: secondBoard,
+                cardBoard: newCardBoard,
+              }),
+            );
+            remoteConnections[0].send('setRevealed:');
           });
         }
-
-        const newCardBoard = getNewCardBoard();
-        setCardBoard(newCardBoard);
-
-        remoteConnections.forEach(sendChannel => {
-          sendChannel.send('setBoard:' + board.boardKey.join('') + '|' + newCardBoard.indices.join(','));
-        });
       }
     }
-  }, [setBoard, setRevealed, cardBoard, remoteConnections, duetMode]);
+  }, [setBoard, setRevealed, cardBoard, remoteConnections]);
 
   const restartCards = useCallback(() => {
     if (confirm(intl.formatMessage({ id: 'Are you sure?' }))) {
@@ -85,11 +87,15 @@ export default function({ onBeACaptain, onSetUseDuet }) {
       setCardBoard(newCardBoard);
 
       remoteConnections.forEach(sendChannel => {
-        sendChannel.send('setBoard:' + board.boardKey.join('') + '|' + newCardBoard.indices.join(','));
+        sendChannel.send('setBoard:' + JSON.stringify({
+          board,
+          visibleBoard: secondBoard,
+          cardBoard,
+        }),);
       });
 
     }
-  }, [setCardBoard, remoteConnections, board]);
+  }, [setCardBoard, remoteConnections, board, secondBoard]);
 
   const handleClick = useCallback((index, key) => e => {
     if (confirm(intl.formatMessage({ id: 'Are you sure?' }))) {
@@ -110,74 +116,94 @@ export default function({ onBeACaptain, onSetUseDuet }) {
     }
   }, [setRevealed, revealed, redCount, setRedCount, blueCount, setBlueCount, remoteConnections]);
 
-  const [duetMode, setDuetMode] = useState(false);
-
-  const handleRTCConnection = useCallback((channel, useDuet) => {
+  const handleRTCConnection = useCallback((channel) => {
     console.log('handleRTCConnection', channel, board, cardBoard);
 
     remoteConnections.push(channel);
     remoteConnections = [...remoteConnections];
 
-    if (useDuet) {
-      setDuetMode(true);
-
-      if (remoteConnections.length === 2) {
-        const [firstBoard, secondBoard, newBoard] = getNewDuetKeyBoard();
-
-        setBoard(newBoard);
-        setRevealed([]);
-        setBlueCount(0);
-        setRedCount(0);
-
-        remoteConnections[0].send('setBoard:' + firstBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
-        remoteConnections[0].send('setRevealed:');
-
-        remoteConnections[1].send('setBoard:' + secondBoard.boardKey.join('') + '|' + cardBoard.indices.join(','));
-        remoteConnections[1].send('setRevealed:');
-
-      } else {
-        setTimeout(() => {
-          window.alert(intl.formatMessage({ id: 'Connect second captain' }));
-          setP2pWizardActive(true);
-        }, 100);
-      }
-
+    if (duetSdp) {
+      //
     } else {
+      // const [firstBoard, secondBoard, newBoard] = getNewDuetKeyBoard();
 
-      channel.send('setBoard:' + board.boardKey.join('') + '|' + cardBoard.indices.join(','));
-      channel.send('setRevealed:' + revealed.join(','));
-      
+      // setBoard(newBoard);
+      // setVisibleBoard(firstBoard);
+      setRevealed([]);
+      setBlueCount(0);
+      setRedCount(0);
+
+      channel.send(
+        'setBoard:' + JSON.stringify({
+          board,
+          visibleBoard: secondBoard,
+          cardBoard,
+        }),
+      );
+      channel.send('setRevealed:');
     }
 
+    channel.onmessage = message => {
+      console.log('new message', message);
+      const action = message.data.slice(0, message.data.indexOf(':'));
+      const actionData = message.data.slice(message.data.indexOf(':') + 1);
+
+      console.log('action', action, 'actionData', actionData);
+
+      switch (action) {
+        case 'setBoard': {
+          const { board, visibleBoard, cardBoard } = JSON.parse(actionData);
+          setBoard(board);
+          setVisibleBoard(visibleBoard);
+          setCardBoard(cardBoard);
+          setP2pWizardActive(false);
+          break;
+        }
+        case 'setRevealed': {
+          if (actionData.length) {
+            const newRevealed = actionData.split(',').map(item => parseInt(item, 10));
+            setRevealed(newRevealed);
+          } else {
+            setRevealed([]);
+          }
+          break;
+        }
+      }
+    };
+
     setP2pWizardActive(false);
-  }, [setDuetMode, setP2pWizardActive, board, cardBoard, revealed, remoteConnections]);
+  }, [setP2pWizardActive, board, secondBoard, cardBoard, setRevealed, remoteConnections]);
+
+  console.log('RENDER: ', board, cardBoard);
+
+  console.log('keyToDuetClass[visibleBoard[index]]}', keyToDuetClass, visibleBoard);
 
   return (
     <Fragment>
       {p2pWizardActive ? (
         <RTCConnectionWizard
           onClose={() => setP2pWizardActive(false)}
-          isInitiator={true}
-          duetMode={duetMode}
+          isInitiator={duetSdp ? false : true}
+          duetMode={true}
           onSuccess={handleRTCConnection}
-          remotePlayersDuetMode={false}
+          remotePlayersDuetMode={true}
+          duetSdp={duetSdp}
         />
       ) : (
         <>
-          <div className={`button-block ${board.isRedFirst ? 'red-text' : 'blue-text'}`}>
-            
+          <div className={`button-block ${board.isRedFirst ? 'red-text' : 'blue-text'}`}>            
             <button className="button" onClick={restartGame}>
               <FormattedMessage id="Restart" />
             </button>
             <button className="button" onClick={restartCards}>
               <FormattedMessage id="Change Cards" />
             </button>
-
-            {!duetMode || remoteConnections.length < 2 ? (
+            
+            {remoteConnections.length < 1 ? (
               <button className="button" onClick={() => {
                 setP2pWizardActive(true);
               }}>
-                <FormattedMessage id="Connect Captain" />
+                <FormattedMessage id="Connect Partner" />
               </button>
             ) : null}
 
@@ -189,16 +215,14 @@ export default function({ onBeACaptain, onSetUseDuet }) {
                 {blueCount ? <span className="blue-counter">{blueCount}</span> : ''}
                 &nbsp;
               </>
-            ) : <button className="button" onClick={onBeACaptain}>
-                  <FormattedMessage id="Be a Captain" />
-                </button>}
+            ) : null}
           </div>
           <div className={`board`} id="card-board">
             {board.boardKey.length && cardBoard.cards.length ? (
               board.boardKey.map((key, index) => (
                 <div
                   key={key+index}
-                  className={`board-item ${isRevealed(index, revealed) ? keyToClass[key] : ''}`}
+                  className={`board-item ${isRevealed(index, revealed) ? keyToClass[key] : keyToDuetClass[visibleBoard.boardKey[index]]}`}
                   onClick={handleClick(index, key)}
                 >
                   <div className="board-item-text">{cardBoard.cards[index]}</div>
@@ -210,7 +234,6 @@ export default function({ onBeACaptain, onSetUseDuet }) {
         </>
       )}
       
-    </Fragment>
-    
+    </Fragment> 
   );
 }

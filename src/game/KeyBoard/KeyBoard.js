@@ -26,6 +26,7 @@ export default function({ onGoToNewBoard }) {
   const [cardBoard, setCardBoard] = useState([]);
 
   const [p2pWizardActive, setP2pWizardActive] = useState(true);
+  const [remotePlayersDuetMode, setRemotePlayersDuetMode] = useState(false);
 
   const handleRTCConnection = useCallback((channel) => {
     console.log('handleRTCConnection', channel);
@@ -36,22 +37,26 @@ export default function({ onGoToNewBoard }) {
       const actionData = message.data.slice(message.data.indexOf(':') + 1);
 
       switch (action) {
-      case 'setBoard': {
-        const [keyStr, cardsStr] = actionData.split('|');
-        setBoard(keyStr.split(''));
-        setCardBoard(cardsStr.split(',').map(index => dictionary[index]));
-        setP2pWizardActive(false);
-        break;
-      }
-      case 'setRevealed': {
-        if (actionData.length) {
-          const newRevealed = actionData.split(',').map(item => parseInt(item, 10));
-          setRevealed(newRevealed);
-        } else {
-          setRevealed([]);
+        case 'setBoard': {
+          const [keyStr, cardsStr] = actionData.split('|');
+          setBoard(keyStr.split(''));
+          setCardBoard(cardsStr.split(',').map(index => dictionary[index]));
+          setP2pWizardActive(false);
+          break;
         }
-        break;
-      }
+        case 'setRevealed': {
+          if (actionData.length) {
+            const newRevealed = actionData.split(',').map(item => parseInt(item, 10));
+            setRevealed(newRevealed);
+          } else {
+            setRevealed([]);
+          }
+          break;
+        }
+        case 'useRemotePlayersDuetMode': {
+          setRemotePlayersDuetMode(true);
+          break;
+        }
       }
     };
   }, [setP2pWizardActive]);

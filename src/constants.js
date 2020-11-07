@@ -12,3 +12,9 @@ export const keyToClass = {
   [CARD_RED]: 'card-red',
   [CARD_GREEN]: 'card-green'
 };
+
+export const keyToDuetClass = {
+  [CARD_KILLER]: 'card-killer-light',
+  [CARD_NEUTRAL]: 'card-neutral-light',
+  [CARD_GREEN]: 'card-green-light'
+};

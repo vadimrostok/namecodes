@@ -17,7 +17,7 @@ const stopScanning = () => {
   }
 };
 
-export default function({ onScanSuccess }) {
+export default function({ remotePlayersDuetMode, onScanSuccess }) {
   const intl = useIntl();
 
   const [board, setBoard] = useState([]);
@@ -90,48 +90,65 @@ export default function({ onScanSuccess }) {
 
   return (
     <>
-      
-      <canvas className="hidden" width="1500" ref={canvasRef}></canvas>
+      {remotePlayersDuetMode ? (
+        <>
+          <span className="nice-text"><FormattedMessage id="Paste copied sdp code here and press submit" /></span>
+          <textarea
+            className="copy-textarea"
+            rows="3"
+            ref={textareaRef}
+            autofocus
+            placeholder={intl.formatMessage({ id: 'Here' })}
+          ></textarea>
+          <button className="button button--light" onClick={() => {
+            handleScanSuccess(textareaRef.current.value);
+          }}><FormattedMessage id="Submit" /></button>
+        </>
+      ) : (
+        <>
+          <canvas className="hidden" width="1500" ref={canvasRef}></canvas>
 
-      <hr />
+          <hr />
 
-      <span className="nice-text"><FormattedMessage id="Paste copied sdp code here and press submit" /></span>
-      <textarea
-        className="copy-textarea"
-        rows="3"
-        ref={textareaRef}
-        autofocus
-        placeholder={intl.formatMessage({ id: 'Here' })}
-      ></textarea>
-      <button className="button button--light" onClick={() => {
-        handleScanSuccess(textareaRef.current.value);
-      }}><FormattedMessage id="Submit" /></button>
+          <span className="nice-text"><FormattedMessage id="Paste copied sdp code here and press submit" /></span>
+          <textarea
+            className="copy-textarea"
+            rows="3"
+            ref={textareaRef}
+            autofocus
+            placeholder={intl.formatMessage({ id: 'Here' })}
+          ></textarea>
+          <button className="button button--light" onClick={() => {
+            handleScanSuccess(textareaRef.current.value);
+          }}><FormattedMessage id="Submit" /></button>
 
-      <hr />
+          <hr />
 
-      <div className="button button-wide button--light" onClick={handleOpenUploader}>
-        <FormattedMessage id="Upload from file" />
-      </div>
-      <span className="nice-text"><FormattedMessage id="Or upload photo of QR code" /></span>
-      <input
-        ref={fileRef}
-        type="file"
-        accepts="image/*"
-        onChange={handleFile}
-        style={{ display: 'none' }}
-        id="qr-photo-file-input"
-      />
+          <div className="button button-wide button--light" onClick={handleOpenUploader}>
+            <FormattedMessage id="Upload from file" />
+          </div>
+          <span className="nice-text"><FormattedMessage id="Or upload photo of QR code" /></span>
+          <input
+            ref={fileRef}
+            type="file"
+            accepts="image/*"
+            onChange={handleFile}
+            style={{ display: 'none' }}
+            id="qr-photo-file-input"
+          />
 
-      <hr />
+          <hr />
 
-      <span className="nice-text">
-        <FormattedMessage id="Or scan board Qr code" />:
-      </span>
-      <video
-        width={window.innerWidth - (window.innerWidth < 800 ? 8 : 40)}
+          <span className="nice-text">
+            <FormattedMessage id="Or scan board Qr code" />:
+          </span>
+          <video
+            width={window.innerWidth - (window.innerWidth < 800 ? 8 : 40)}
         /* autoPlay */
-        ref={videoRef}
-      ></video>
+            ref={videoRef}
+          ></video>
+        </>
+      )}
     </>
   );
 }
