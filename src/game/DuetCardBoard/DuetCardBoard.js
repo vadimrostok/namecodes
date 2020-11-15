@@ -31,6 +31,7 @@ export default function({ duetSdp, onSetUseDuet }) {
   const [blueCount, setBlueCount] = useState(0);
 
   const [p2pWizardActive, setP2pWizardActive] = useState(!!duetSdp || false);
+  const [isP2pInitiator, setIsP2pInitiator] = useState(!duetSdp);
 
   const intl = useIntl();
 
@@ -64,6 +65,7 @@ export default function({ duetSdp, onSetUseDuet }) {
           setBlueCount(0);
           setRedCount(0);
 
+          console.error('restart game');
           setCardBoard(newCardBoard);
 
           remoteConnections.forEach(remoteConnection => {
@@ -84,13 +86,14 @@ export default function({ duetSdp, onSetUseDuet }) {
   const restartCards = useCallback(() => {
     if (confirm(intl.formatMessage({ id: 'Are you sure?' }))) {
       const newCardBoard = getNewCardBoard();
+      console.error('restart cards');
       setCardBoard(newCardBoard);
 
       remoteConnections.forEach(sendChannel => {
         sendChannel.send('setBoard:' + JSON.stringify({
           board,
           visibleBoard: secondBoard,
-          cardBoard,
+          cardBoard: newCardBoard,
         }),);
       });
 
@@ -122,9 +125,7 @@ export default function({ duetSdp, onSetUseDuet }) {
     remoteConnections.push(channel);
     remoteConnections = [...remoteConnections];
 
-    if (duetSdp) {
-      //
-    } else {
+    if (isP2pInitiator) {
       // const [firstBoard, secondBoard, newBoard] = getNewDuetKeyBoard();
 
       // setBoard(newBoard);
@@ -155,6 +156,7 @@ export default function({ duetSdp, onSetUseDuet }) {
           const { board, visibleBoard, cardBoard } = JSON.parse(actionData);
           setBoard(board);
           setVisibleBoard(visibleBoard);
+          console.error('set board');
           setCardBoard(cardBoard);
           setP2pWizardActive(false);
           break;
@@ -172,18 +174,18 @@ export default function({ duetSdp, onSetUseDuet }) {
     };
 
     setP2pWizardActive(false);
-  }, [setP2pWizardActive, board, secondBoard, cardBoard, setRevealed, remoteConnections]);
+  }, [setP2pWizardActive, board, secondBoard, cardBoard, setRevealed, remoteConnections, isP2pInitiator]);
 
-  console.log('RENDER: ', board, cardBoard);
+  // console.log('RENDER: ', board, cardBoard);
 
-  console.log('keyToDuetClass[visibleBoard[index]]}', keyToDuetClass, visibleBoard);
+  // console.log('keyToDuetClass[visibleBoard[index]]}', keyToDuetClass, visibleBoard);
 
   return (
     <Fragment>
       {p2pWizardActive ? (
         <RTCConnectionWizard
           onClose={() => setP2pWizardActive(false)}
-          isInitiator={duetSdp ? false : true}
+          isInitiator={isP2pInitiator}
           duetMode={true}
           onSuccess={handleRTCConnection}
           remotePlayersDuetMode={true}
@@ -200,11 +202,19 @@ export default function({ duetSdp, onSetUseDuet }) {
             </button>
             
             {remoteConnections.length < 1 ? (
-              <button className="button" onClick={() => {
-                setP2pWizardActive(true);
-              }}>
-                <FormattedMessage id="Connect Partner" />
-              </button>
+              <>
+                <button className="button" onClick={() => {
+                  setP2pWizardActive(true);
+                }}>
+                  <FormattedMessage id="Connect Partner" />
+                </button>
+                <button className="button" onClick={() => {
+                  setIsP2pInitiator(false);
+                  setP2pWizardActive(true);
+                }}>
+                  <FormattedMessage id="Connect as Partner" />
+                </button>
+              </>
             ) : null}
 
             {revealed.length ? (

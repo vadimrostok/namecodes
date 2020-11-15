@@ -2,6 +2,9 @@ import { FormattedMessage } from 'react-intl';
 import QRCode from 'qrcode';
 import React, { useEffect, useRef, Fragment, useState, useCallback } from 'react';
 
+const { pathname, origin } = new window.URL(window.location.href);
+const currentLocation = origin + pathname;
+
 export default function({ isInitiator, showQr, code, remotePlayersDuetMode }) {
   const canvasRef = useRef();
   const textRef = useRef();
@@ -50,7 +53,7 @@ export default function({ isInitiator, showQr, code, remotePlayersDuetMode }) {
                 className="copy-textarea"
                 rows="3"
                 ref={textRef}
-                defaultValue={`${origin}?connect-duet=${encodeURIComponent(code)}`}
+                defaultValue={`${currentLocation}?connect-duet=${encodeURIComponent(code)}`}
               ></textarea>
             </>
           ) : (

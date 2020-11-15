@@ -35,14 +35,14 @@ class RTCConnectionWizard extends Component {
 
     sendChannel = remoteConnection.createDataChannel('sendChannel');
     sendChannel.onopen = () => {
-      console.log('handleSendChannelStatusChange');
+      console.error('OPEN');
       if (isInitiator) {
         sendChannel.send('ping');
       }
-      
     };
     sendChannel.onclose = () => {
-      console.log('handleSendChannelStatusChange');
+      console.error('CLOSE');
+      alert(this.props.intl.formatMessage({ id: 'Connection is corrupt, restart the game' }));
     };
     if (isInitiator) {
       sendChannel.onmessage = message => {

@@ -2,6 +2,21 @@ import React, { useEffect, useState, useCallback, Fragment } from 'react';
 import { render } from 'react-dom';
 import { IntlProvider, useIntl } from 'react-intl';
 
+// The wake lock sentinel.
+let wakeLock = null;
+
+// Function that attempts to request a wake lock.
+const requestWakeLock = async () => {
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => {
+      console.log('Wake Lock was released');
+    });
+    console.log('Wake Lock is active');
+  } catch (err) {
+    console.error(`${err.name}, ${err.message}`);
+  }
+};
 
 let i18nConfig = {
   locale: 'uk-UA',
@@ -32,9 +47,12 @@ let i18nConfig = {
     'Duet?': 'Дует?',
     'Here': 'Вставте сюди',
     'Upload from file': 'Завантажити фото QR sdp кода',
-    'Connect Partner': 'Під\'єднати партнера',
+    'Connect Partner': 'Ініціювати з\'єднання',
     'Share this link to the second player': 'Передайте це посилання другому гравцю',
     'Share this sdp code to another player': 'Передайте це sdp код іншому гравцю',
+    'Connection is corrupt, restart the game': 'З\'єднання зіпсоване, перезапустіть гру',
+    'Are players remote?': 'Використати посилання замість QR коду?',
+    'Connect as Partner': 'Підєднатись',
   }
 };
 
